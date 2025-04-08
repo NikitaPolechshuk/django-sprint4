@@ -21,7 +21,7 @@ urlpatterns = [
          name='edit_profile'),
 
     # Post URLS
-    path('post/create/',
+    path('posts/create/',
          views.PostCreateView.as_view(),
          name='create_post'),
     path('posts/<int:post_id>/edit/',
