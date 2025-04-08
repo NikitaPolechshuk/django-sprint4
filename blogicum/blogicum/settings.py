@@ -63,7 +63,6 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
-#MEDIA_URL = 'media/'
 
 TEMPLATES = [
     {
