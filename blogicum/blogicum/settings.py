@@ -53,7 +53,7 @@ ROOT_URLCONF = 'blogicum.urls'
 
 LOGIN_URL = '/auth/login/'
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'
 
 TEMPLATES_DIR = BASE_DIR / 'templates'
 
@@ -63,6 +63,7 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
+#MEDIA_URL = 'media/'
 
 TEMPLATES = [
     {

@@ -7,8 +7,8 @@ from django.contrib.auth.forms import UserCreationForm
 
 from pages import views
 
-handler404 = 'core.views.handler_404'
-handler500 = 'core.views.handler_500'
+handler404 = 'pages.views.handler_404'
+handler500 = 'pages.views.handler_500'
 
 urlpatterns = [
     path('', include('blog.urls')),
@@ -30,8 +30,8 @@ urlpatterns = [
          name='registration'),
 ]
 
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns += (path('__debug__/', include(debug_toolbar.urls)),)
+# if settings.DEBUG:
+#    import debug_toolbar
+#    urlpatterns += (path('__debug__/', include(debug_toolbar.urls)),)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
