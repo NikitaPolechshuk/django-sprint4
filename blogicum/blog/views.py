@@ -3,8 +3,8 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.db.models import Count
-from django.shortcuts import get_object_or_404
+from django.db.models import Count, Q
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (
     ListView, CreateView, UpdateView, DetailView, DeleteView
 )
@@ -95,6 +95,11 @@ class PostCreateView(LoginRequiredMixin, PostMixin, CreateView):
 class PostDetailView(PostMixin, DetailView):
     template_name = 'blog/detail.html'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(
+            Q(is_published=True) | Q(author=self.request.user))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['post'] = self.get_object()
@@ -106,6 +111,9 @@ class PostDetailView(PostMixin, DetailView):
 
 
 class PostUpdateView(OnlyAuthorMixin, PostMixin, UpdateView):
+    def handle_no_permission(self):
+        return redirect('blog:post_detail', post_id=self.kwargs['post_id'])
+
     def get_success_url(self):
         return reverse_lazy('blog:post_detail',
                             kwargs={'post_id': self.kwargs['post_id']})
@@ -116,7 +124,8 @@ class PostDeleteView(OnlyAuthorMixin, DeleteView):
     pk_url_kwarg = 'post_id'
 
     def get_queryset(self):
-        return Post.objects.filter(pk=self.kwargs['post_id'])
+        queryset = get_base_post_queryset()
+        return queryset.filter(pk=self.kwargs['post_id'])
 
     def get_success_url(self):
         return reverse_lazy('blog:profile',
