@@ -22,11 +22,19 @@ User = get_user_model()
 
 
 def get_base_post_queryset():
+    """Базовый запрос к модели Post."""
     return Post.objects.select_related(
         'location', 'author', 'category',
     ).annotate(
         comment_count=Count('post_comments')
     ).order_by('-pub_date')
+
+
+def base_filter_queryset(queryset):
+    """Базовая фильтрация."""
+    return queryset.filter(pub_date__lte=timezone.now(),
+                           category__is_published=True,
+                           is_published=True)
 
 
 class OnlyAuthorMixin(UserPassesTestMixin):
@@ -62,9 +70,7 @@ class PostListView(BasePostListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(pub_date__lte=timezone.now(),
-                               category__is_published=True,
-                               is_published=True)
+        return base_filter_queryset(queryset)
 
 
 class UserPostListView(BasePostListView):
@@ -96,9 +102,18 @@ class PostDetailView(PostMixin, DetailView):
     template_name = 'blog/detail.html'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        return queryset.filter(
-            Q(is_published=True) | Q(author=self.request.user))
+        queryset = get_base_post_queryset()
+        auth_user = self.request.user
+        if auth_user.pk is not None:
+            # Если пользователь авторизован, то ему доступны все его записи
+            queryset = queryset.filter(
+                (Q(category__is_published=True) & Q(is_published=True) & Q(pub_date__lte=timezone.now()))
+                | Q(author=auth_user)
+            )
+        else:
+            # Для пользователя без авторизации применяем базовую фильтрацию
+            queryset = base_filter_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -139,9 +154,11 @@ class CommentCreateView(LoginRequiredMixin, CommentMixin, CreateView):
                             )
 
     def form_valid(self, form):
+        # Если поста не существуем, выбрасываем 404
+        get_object_or_404(Post, pk=self.kwargs['post_id'])
+        # Заполняем форму
         form.instance.author = self.request.user
         form.instance.post_id = self.kwargs['post_id']
-        get_object_or_404(Post, pk=self.kwargs['post_id'])
         return super().form_valid(form)
 
 
@@ -168,10 +185,8 @@ class CategoryPostListView(BasePostListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(
-            category__slug=self.kwargs['category_slug'],
-            is_published=True,
-            pub_date__lte=timezone.now()
+        return base_filter_queryset(queryset).filter(
+            category__slug=self.kwargs['category_slug']
         )
 
     def get_context_data(self, **kwargs):
