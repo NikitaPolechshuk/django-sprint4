@@ -48,6 +48,7 @@ class PostMixin:
     form_class = PostForm
     template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
+    queryset = get_base_post_queryset()
 
 
 class CommentMixin:
@@ -59,7 +60,6 @@ class CommentMixin:
 
 class BasePostListView(PostMixin, ListView):
     paginate_by = PAGINATOR_NUM
-    queryset = get_base_post_queryset()
 
     class Meta:
         abstract = True
@@ -102,11 +102,11 @@ class PostDetailView(PostMixin, DetailView):
     template_name = 'blog/detail.html'
 
     def get_queryset(self):
-        base_queryset = get_base_post_queryset()
+        base_queryset = super().get_queryset()
         filtered_base_queryset = base_filter_queryset(base_queryset)
         if self.request.user.is_authenticated:
-            # Если пользователь авторизован, то ему доступны:
-            # Отфильтрованные записи + его записи
+            # Если пользователь авторизован, то ему доступны
+            # все его записи
             return filtered_base_queryset | base_queryset.filter(
                 author=self.request.user)
         # Для пользователя без авторизации возвращаем
