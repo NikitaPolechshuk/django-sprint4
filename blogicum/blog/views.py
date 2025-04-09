@@ -107,7 +107,10 @@ class PostDetailView(PostMixin, DetailView):
         if auth_user.pk is not None:
             # Если пользователь авторизован, то ему доступны все его записи
             queryset = queryset.filter(
-                (Q(category__is_published=True) & Q(is_published=True) & Q(pub_date__lte=timezone.now()))
+                (Q(category__is_published=True)
+                 & Q(is_published=True)
+                 & Q(pub_date__lte=timezone.now())
+                 )
                 | Q(author=auth_user)
             )
         else:
