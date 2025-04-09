@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (
     ListView, CreateView, UpdateView, DetailView, DeleteView
@@ -102,21 +102,16 @@ class PostDetailView(PostMixin, DetailView):
     template_name = 'blog/detail.html'
 
     def get_queryset(self):
-        queryset = get_base_post_queryset()
-        auth_user = self.request.user
-        if auth_user.pk is not None:
-            # Если пользователь авторизован, то ему доступны все его записи
-            queryset = queryset.filter(
-                (Q(category__is_published=True)
-                 & Q(is_published=True)
-                 & Q(pub_date__lte=timezone.now())
-                 )
-                | Q(author=auth_user)
-            )
-        else:
-            # Для пользователя без авторизации применяем базовую фильтрацию
-            queryset = base_filter_queryset(queryset)
-        return queryset
+        base_queryset = get_base_post_queryset()
+        filtered_base_queryset = base_filter_queryset(base_queryset)
+        if self.request.user.is_authenticated:
+            # Если пользователь авторизован, то ему доступны:
+            # Отфильтрованные записи + его записи
+            return filtered_base_queryset | base_queryset.filter(
+                author=self.request.user)
+        # Для пользователя без авторизации возвращаем
+        # QuerySet с базовой фильтрацией
+        return filtered_base_queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
