@@ -91,6 +91,7 @@ class UserPostListView(BasePostListView):
 class PostCreateView(LoginRequiredMixin, PostMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
+        form.instance.pub_date = timezone.now()
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -133,7 +134,7 @@ class PostUpdateView(OnlyAuthorMixin, PostMixin, UpdateView):
 
 
 class PostDeleteView(OnlyAuthorMixin, DeleteView):
-    template_name = 'blog/post_delete.html'
+    template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
 
     def get_queryset(self):
@@ -152,7 +153,7 @@ class CommentCreateView(LoginRequiredMixin, CommentMixin, CreateView):
                             )
 
     def form_valid(self, form):
-        # Если поста не существуем, выбрасываем 404
+        # Если поста не существует, выбрасываем 404
         get_object_or_404(Post, pk=self.kwargs['post_id'])
         # Заполняем форму
         form.instance.author = self.request.user

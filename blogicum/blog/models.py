@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 
@@ -69,6 +70,7 @@ class Post(PublishedModel):
         verbose_name='Текст'
     )
     pub_date = models.DateTimeField(
+        default=timezone.now,
         verbose_name='Дата и время публикации',
         help_text='''Если установить дату и время в будущем — \
 можно делать отложенные публикации.'''
@@ -77,7 +79,7 @@ class Post(PublishedModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        related_name='author_posts'
+        related_name='posts'
     )
     location = models.ForeignKey(
         Location,
@@ -85,14 +87,14 @@ class Post(PublishedModel):
         null=True,
         blank=True,
         verbose_name='Местоположение',
-        related_name='location_posts'
+        related_name='posts'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='Категория',
-        related_name='category_posts'
+        related_name='posts'
     )
     image = models.ImageField('Фото', upload_to='posts_images', blank=True)
 
@@ -113,7 +115,7 @@ class Comment(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        related_name='author_comments'
+        related_name='comments'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -131,7 +133,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ["pub_date"]
+        ordering = ('pub_date',)
 
     def __str__(self):
         return self.title
