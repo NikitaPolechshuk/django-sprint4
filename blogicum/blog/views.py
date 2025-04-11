@@ -136,15 +136,11 @@ class PostUpdateView(OnlyAuthorMixin, PostMixin, UpdateView):
 class PostDeleteView(OnlyAuthorMixin, DeleteView):
     template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
-    # form_class = PostForm
 
-    def form_invalid(self, form):
-        print('WTF !?')
-        print('==> ERRORS: ' + str(form.errors))
-        return super().form_invalid(form)
-
-#    def get_form(self):
-#        return PostForm(instance=self.get_object())
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = PostForm(instance=self.get_object())
+        return context
 
     def get_queryset(self):
         queryset = get_base_post_queryset()
